@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Kelompok Teseh</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+  :root{
+    --green:#1A6B3C;--green2:#2d8653;--green-light:#E8F5EE;--green-pale:#F0FAF4;
+    --orange:#E8842A;--blue:#3B7DD8;--red:#E53935;
+    --text:#111;--text2:#555;--text3:#999;--border:#EBEBEB;--bg:#F5F5F5;--white:#fff;
+    --radius:14px;--radius-sm:10px;--shadow:0 2px 12px rgba(0,0,0,0.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,'SF Pro Display','Segoe UI',sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;min-height:100vh;overflow-x:hidden;position:relative}
+  .screen{display:none;flex-direction:column;min-height:100vh;padding-bottom:80px}
+  .screen.active{display:flex}
+
+  /* STATUSBAR - hidden, use real phone statusbar */
+  .statusbar{display:none !important}
+
+  /* SCROLL AREA */
+  .scroll-area{flex:1;overflow-y:auto;padding:0 0 8px}
+  .scroll-area::-webkit-scrollbar{display:none}
+
+  /* HEADER */
+  .header{background:var(--white);padding:14px 20px 14px;border-bottom:1px solid var(--border)}
+  .header-row{display:flex;align-items:center;justify-content:space-between}
+  .header-logo{width:42px;height:42px;background:linear-gradient(135deg,#6C4DE6,#A87AFF);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px}
+  .header-title{flex:1;margin-left:12px}
+  .header-title h1{font-size:16px;font-weight:700;color:var(--text);line-height:1.2}
+  .header-title p{font-size:11px;color:var(--text3);margin-top:2px}
+  .sync-badge{display:flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;color:var(--green2)}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:#2ecc71}
+  .header-actions{display:flex;gap:8px;margin-top:12px}
+  .btn-outline{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:var(--green);background:var(--white);cursor:pointer}
+  .btn-outline i{font-size:13px}
+  .info-bar{background:#FFFBF0;border:1px solid #FFE8A3;border-radius:var(--radius-sm);margin:12px 20px 0;padding:11px 14px;display:flex;gap:10px;align-items:flex-start}
+  .info-bar i{color:#E8A020;font-size:14px;margin-top:1px;flex-shrink:0}
+  .info-bar p{font-size:12px;color:#7A5800;line-height:1.5}
+
+  /* TABS */
+  .tabs{background:var(--white);padding:0 12px;border-bottom:1px solid var(--border);display:flex;gap:0;overflow-x:auto;position:sticky;top:0;z-index:90}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:1;min-width:70px;padding:12px 8px 10px;text-align:center;cursor:pointer;border-bottom:2.5px solid transparent;font-size:12px;color:var(--text3);font-weight:500;transition:.15s;white-space:nowrap}
+  .tab.active{color:var(--green);border-color:var(--green);font-weight:700}
+  .tab i{display:block;font-size:18px;margin-bottom:3px}
+
+  /* SECTION */
+  .section{padding:18px 16px 0}
+  .section-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px}
+
+  /* STAT CARDS */
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}
+  .stat-card{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+  .stat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:16px}
+  .stat-icon.green{background:#E8F5EE;color:var(--green)}
+  .stat-icon.green2{background:#D4EFDF;color:var(--green2)}
+  .stat-icon.orange{background:#FEF0E4;color:var(--orange)}
+  .stat-icon.blue{background:#E8F0FD;color:var(--blue)}
+  .stat-value{font-size:28px;font-weight:800;color:var(--text);line-height:1}
+  .stat-label{font-size:13px;font-weight:600;color:var(--text);margin-top:6px}
+  .stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+  /* FILTER CHIPS */
+  .filter-wrap{padding:0 16px 4px;overflow-x:auto;white-space:nowrap}
+  .filter-wrap::-webkit-scrollbar{display:none}
+  .filter-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;padding:0 16px}
+  .chip{display:inline-block;padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);margin-right:7px;cursor:pointer;background:var(--white);transition:.15s}
+  .chip.active{background:var(--green);color:#fff;border-color:var(--green)}
+
+  /* SEARCH BAR */
+  .search-wrap{padding:10px 16px;display:flex;gap:8px;align-items:center}
+  .search-box{flex:1;display:flex;align-items:center;gap:8px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px}
+  .search-box i{color:var(--text3);font-size:13px}
+  .search-box input{border:none;outline:none;font-size:13px;color:var(--text);background:transparent;width:100%;font-family:inherit}
+  .search-box input::placeholder{color:var(--text3)}
+  .filter-btn{width:42px;height:42px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:14px;cursor:pointer;flex-shrink:0}
+
+  /* PRINT BTN */
+  .print-btn{display:flex;align-items:center;gap:7px;padding:11px 18px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--white);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;margin:0 16px 12px}
+
+  /* TABLE CARD */
+  .table-card{margin:0 16px;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--border)}
+  .table-head{display:grid;background:var(--green);color:#fff;font-size:11px;font-weight:700;padding:10px 14px}
+  .table-head.kk{grid-template-columns:28px 1fr 60px 70px}
+  .table-body-empty{text-align:center;padding:40px 20px;color:var(--text3)}
+  .table-body-empty i{font-size:38px;display:block;margin-bottom:10px;color:#ccc}
+  .table-body-empty p{font-size:13px}
+
+  /* PERSON CARD */
+  .person-card{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--white);border-bottom:1px solid var(--border);cursor:pointer;transition:.1s}
+  .person-card:last-child{border-bottom:none}
+  .person-card:active{background:var(--green-pale)}
+  .person-avatar{width:48px;height:48px;border-radius:14px;object-fit:cover;background:var(--green-light);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:20px;font-weight:700}
+  .person-avatar img{width:100%;height:100%;border-radius:14px;object-fit:cover}
+  .person-info{flex:1}
+  .person-name{font-size:14px;font-weight:700;color:var(--text)}
+  .person-sub{font-size:12px;color:var(--text3);margin-top:2px}
+  .person-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--green-light);color:var(--green)}
+  .person-badge.orange{background:#FEF0E4;color:var(--orange)}
+  .chevron{color:var(--border);font-size:12px}
+
+  /* CLASS CARDS */
+  .class-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 16px}
+  .class-card{background:var(--white);border-radius:var(--radius-sm);border:1px solid var(--border);padding:12px 10px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.04)}
+  .class-card .num{font-size:22px;font-weight:800;color:var(--green)}
+  .class-card .lbl{font-size:10px;color:var(--text3);margin-top:2px;font-weight:500}
+
+  /* NAV BAR */
+  .navbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:8px 0 16px;z-index:200}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--text3);font-size:10px;font-weight:500}
+  .nav-item i{font-size:20px}
+  .nav-item.active{color:var(--green)}
+  .nav-add{width:52px;height:52px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;box-shadow:0 4px 16px rgba(26,107,60,.35);margin-top:-16px;cursor:pointer}
+
+  /* LAPORAN PAGE */
+  .laporan-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--white);border-bottom:1px solid var(--border)}
+  .laporan-header h2{font-size:17px;font-weight:700}
+  .laporan-header i{font-size:18px;color:var(--text2)}
+  .laporan-section{padding:18px 16px 8px}
+  .laporan-section h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px}
+  .laporan-item{display:flex;align-items:center;gap:14px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;cursor:pointer;box-shadow:var(--shadow)}
+  .laporan-item:active{background:var(--green-pale)}
+  .laporan-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .laporan-icon.g{background:#E8F5EE;color:var(--green)}
+  .laporan-icon.o{background:#FEF0E4;color:var(--orange)}
+  .laporan-icon.b{background:#E8F0FD;color:var(--blue)}
+  .laporan-icon.p{background:#F3E8FF;color:#7C3AED}
+  .laporan-text{flex:1}
+  .laporan-text strong{font-size:14px;font-weight:700;display:block}
+  .laporan-text span{font-size:12px;color:var(--text3)}
+  .periode-card{margin:0 16px 16px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow)}
+  .periode-card .dates{font-size:14px;font-weight:600;color:var(--text)}
+  .periode-card i{color:var(--text3);font-size:16px}
+
+  /* PENGATURAN */
+  .pengaturan-header{background:var(--white);padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .pengaturan-header h2{font-size:17px;font-weight:700}
+  .setting-section{padding:20px 16px 8px}
+  .setting-section h3{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+  .setting-item{display:flex;align-items:center;gap:14px;background:var(--white);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;border:1px solid var(--border);cursor:pointer}
+  .setting-item .sicon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+  .setting-item .sicon.green{background:#E8F5EE;color:var(--green)}
+  .setting-item .sicon.red{background:#FEE8E8;color:var(--red)}
+  .setting-item .sicon.blue{background:#E8F0FD;color:var(--blue)}
+  .setting-item .sicon.gray{background:#F5F5F5;color:#666}
+  .setting-item .stext{flex:1}
+  .setting-item .stext strong{font-size:14px;font-weight:600;display:block}
+  .setting-item .stext span{font-size:12px;color:var(--text3)}
+  .setting-item i.chevron-r{color:var(--border);font-size:12px}
+  .toggle{width:46px;height:26px;background:#ccc;border-radius:13px;position:relative;cursor:pointer;transition:.2s;flex-shrink:0}
+  .toggle.on{background:var(--green)}
+  .toggle::after{content:'';width:22px;height:22px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+  .toggle.on::after{left:22px}
+
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:flex-end;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal-sheet{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:20px;max-height:80vh;overflow-y:auto}
+  .modal-sheet::-webkit-scrollbar{display:none}
+  .modal-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 18px}
+  .modal-title{font-size:17px;font-weight:700;margin-bottom:18px}
+  .form-group{margin-bottom:14px}
+  .form-group label{font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px}
+  .form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;outline:none;color:var(--text);background:var(--white)}
+  .form-group textarea{resize:none;height:70px}
+  .btn-primary{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px}
+  .btn-cancel{width:100%;padding:14px;background:#f5f5f5;color:var(--text);border:none;border-radius:var(--radius);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:8px}
+
+  /* PASSWORD MODAL */
+  .pw-modal{background:var(--white);border-radius:20px;padding:28px 24px;width:90%;max-width:340px;text-align:center}
+  .pw-icon{font-size:40px;margin-bottom:12px}
+  .pw-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px}
+  .pw-sub{font-size:13px;color:var(--text3);margin-bottom:20px}
+  .pw-input-wrap{position:relative;margin-bottom:14px}
+  .pw-input-wrap input{width:100%;padding:12px 44px 12px 16px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:15px;outline:none;font-family:inherit;transition:.15s}
+  .pw-input-wrap input:focus{border-color:var(--green)}
+  .pw-input-wrap .eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:15px}
+  .pw-err{color:var(--red);font-size:12px;text-align:left;margin-bottom:10px}
+  .pw-btns{display:flex;gap:10px}
+  .pw-btns button{flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer}
+  .pw-btns .cancel{background:#f5f5f5;color:var(--text)}
+  .pw-btns .confirm{background:var(--green);color:#fff}
+
+  /* EDIT MODE BANNER */
+  .edit-banner{background:var(--green);padding:8px 16px;display:flex;align-items:center;justify-content:space-between}
+  .edit-banner span{color:#fff;font-size:13px;font-weight:600}
+  .edit-banner button{background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer}
+
+  /* NOTIFICATION DOT */
+  .notif-dot{width:8px;height:8px;background:var(--red);border-radius:50%;position:absolute;top:0;right:0}
+
+  /* AVATAR COLORS */
+  .av-1{background:#E8F5EE;color:var(--green)}
+  .av-2{background:#E8F0FD;color:var(--blue)}
+  .av-3{background:#FEF0E4;color:var(--orange)}
+  .av-4{background:#F3E8FF;color:#7C3AED}
+  .av-5{background:#FEE8E8;color:var(--red)}
+
+  @media(max-width:380px){.stats-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- ===== PASSWORD MODAL ===== -->
+<div class="modal-overlay" id="pwOverlay" style="align-items:center;justify-content:center">
+  <div class="pw-modal">
+    <div class="pw-icon">🔐</div>
+    <div class="pw-title">Konfirmasi Password</div>
+    <div class="pw-sub">Masukkan password untuk mengubah data</div>
+    <div class="pw-input-wrap">
+      <input type="password" id="pwInput" placeholder="Password..." onkeydown="if(event.key==='Enter')checkPw()"/>
+      <i class="fa fa-eye eye" id="eyeIcon" onclick="toggleEye()"></i>
+    </div>
+    <div class="pw-err" id="pwErr" style="display:none">Password salah. Coba lagi.</div>
+    <div class="pw-btns">
+      <button class="cancel" onclick="closePwModal()">Batal</button>
+      <button class="confirm" onclick="checkPw()">Masuk</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADD MODAL ===== -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="addModalTitle">Tambah Data</div>
+    <div id="addModalBody"></div>
+    <button class="btn-primary" onclick="saveData()">Simpan</button>
+    <button class="btn-cancel" onclick="closeModal('addModal')">Batal</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN: BERANDA ===== -->
+<div class="screen active" id="screen-beranda">
+  <div style="position:sticky;top:0;z-index:100">
+    <div class="header">
+      <div class="header-row">
+        <div class="header-logo"><i class="fas fa-star" style="font-size:18px"></i></div>
+        <div class="header-title">
+          <h1>Sistem Pendataan Kelompok Teseh</h1>
+          <p>Manajemen Data Jama'ah & Generasi Penerus</p>
+        </div>
+        <div style="position:relative">
+          <i class="far fa-bell" style="font-size:20px;color:var(--text2)"></i>
+          <div class="notif-dot"></div>
+        </div>
+      </div>
+      <div class="sync-badge">
+        <div class="sync-dot"></div>
+        <span id="syncTime">Sinkron: 16.45.42</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn-outline" onclick="loadData()"><i class="fas fa-arrows-rotate"></i> Refresh</button>
+        <button class="btn-outline" id="modeBtn" onclick="toggleEditMode()"><i class="fas fa-lock"></i> Mode Ubah Data</button>
+      </div>
+    </div>
+    <div class="info-bar" id="infoBar">
+      <i class="far fa-eye"></i>
+      <p>Mode tampilan — Anda hanya dapat melihat data. Klik <b>"Mode Ubah Data"</b> di atas untuk mengubah data (memerlukan password).</p>
+    </div>
+    <div id="editBanner" style="display:none" class="edit-banner">
+      <span>✏️ Mode Edit Aktif</span>
+      <button onclick="lockEdit()">Kunci</button>
+    </div>
+
+  </div>
+
+  <div class="scroll-area" id="tabContent">
+    <!-- TAB 0: KELUARGA -->
+    <div id="tab-0">
+      <div class="section" style="padding-top:16px"><div class="section-title">Ringkasan Data</div></div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-users"></i></div>
+          <div class="stat-value" id="s-kk">0</div>
+          <div class="stat-label">Total Kepala Keluarga</div>
+          <div class="stat-sub">Seluruh data KK terdaftar</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green2"><i class="fas fa-circle-check"></i></div>
+          <div class="stat-value" id="s-aktif">0</div>
+          <div class="stat-label">KK Aktif</div>
+          <div class="stat-sub">Tinggal di wilayah</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange"><i class="fas fa-plane"></i></div>
+          <div class="stat-value" id="s-merantau">0</div>
+          <div class="stat-label">KK Merantau</div>
+          <div class="stat-sub">Di luar wilayah</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fas fa-user-group"></i></div>
+          <div class="stat-value" id="s-anggota">0</div>
+          <div class="stat-label">Total Anggota Jama'ah</div>
+          <div class="stat-sub">Seluruh anggota terdaftar</div>
+        </div>
+      </div>
+      <div class="section"><div class="section-title">Data Keluarga</div></div>
+      <div class="search-wrap">
+        <div class="search-box"><i class="fas fa-magnifying-glass"></i><input type="text" placeholder="Cari nama KK / anggota..." id="kkSearch" oninput="renderKK()"/></div>
+        <div class="filter-btn"><i class="fas fa-sliders"></i></div>
+      </div>
+      <button class="print-btn" onclick="printKK()"><i class="fas fa-print"></i> Cetak PDF</button>
+      <div class="table-card" id="kkList"></div>
+    </div>
+
+    <!-- TAB 1: GENERASI -->
+    <div id="tab-1" style="display:none">
+      <div class="section" style="padding-top:14px"><div class="section-title">Ringkasan Kelas TPQ</div></div>
+      <div class="class-grid" id="classGrid"></div>
+      <div class="filter-title">Filter Kelas</div>
+      <div style="padding:0 16px 10px;overflow-x:auto;white-space:nowrap" id="genChips"></div>
+      <div class="search-wrap">
+        <div class="search-box"><i class="fas fa-magnifying-glass"></i><input type="text" placeholder="Cari nama anak / ortu..." id="genSearch" oninput="renderGenerus()"/></div>
+        <div class="filter-btn"><i class="fas fa-sliders"></i></div>
+      </div>
+      <button class="print-btn" onclick="printGenerus()"><i class="fas fa-print"></i> Cetak PDF</button>
+      <div style="font-size:13px;color:var(--text3);padding:0 16px 8px" id="genCount"></div>
+      <div class="table-card" id="genusList"></div>
+    </div>
+
+    <!-- TAB 2: GURU -->
+    <div id="tab-2" style="display:none">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-chalkboard-user"></i></div>
+          <div class="stat-value" id="s-guru">0</div>
+          <div class="stat-label">Total Guru</div>
+          <div class="stat-sub">Terdaftar</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fas fa-medal"></i></div>
+          <div class="stat-value" id="s-mt">0</div>
+          <div class="stat-label">MT Tugasan</div>
+          <div class="stat-sub">Muballighin</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange"><i class="fas fa-handshake"></i></div>
+          <div class="stat-value" id="s-ms">0</div>
+          <div class="stat-label">MS Setempat</div>
+          <div class="stat-sub">Muballighin</div>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <div class="search-box"><i class="fas fa-magnifying-glass"></i><input type="text" placeholder="Cari nama guru..." id="guruSearch" oninput="renderGuru()"/></div>
+        <div class="filter-btn"><i class="fas fa-sliders"></i></div>
+      </div>
+      <button class="print-btn" onclick="printGuru()"><i class="fas fa-print"></i> Cetak PDF</button>
+      <div class="table-card" id="guruList"></div>
+    </div>
+
+    <!-- TAB 3: RAPOR -->
+    <div id="tab-3" style="display:none">
+      <div class="filter-title" style="padding-top:14px">Filter Kelas</div>
+      <div style="padding:0 16px 10px;overflow-x:auto;white-space:nowrap" id="raporChips"></div>
+      <div class="search-wrap">
+        <div class="search-box"><i class="fas fa-magnifying-glass"></i><input type="text" placeholder="Cari nama anak / ortu..." id="raporSearch" oninput="renderRapor()"/></div>
+        <div class="filter-btn"><i class="fas fa-sliders"></i></div>
+      </div>
+      <button class="print-btn" onclick="printRapor()"><i class="fas fa-print"></i> Cetak PDF</button>
+      <div style="font-size:13px;color:var(--text3);padding:0 16px 8px" id="raporTitle"></div>
+      <div class="table-card" id="raporList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: LAPORAN ===== -->
+<div class="screen" id="screen-laporan">
+  <div style="position:sticky;top:0;z-index:100">
+    <div class="laporan-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;background:var(--green-light);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:16px"><i class="fas fa-chart-bar"></i></div>
+        <h2>Laporan & Rekap</h2>
+      </div>
+      <i class="fas fa-arrow-down-to-line"></i>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="laporan-section"><h3>Pilih Laporan</h3>
+      <div class="laporan-item" onclick="printKK()">
+        <div class="laporan-icon g"><i class="fas fa-users"></i></div>
+        <div class="laporan-text"><strong>Rekap Kepala Keluarga</strong><span>Laporan seluruh data KK</span></div>
+        <i class="fas fa-chevron-right chevron"></i>
+      </div>
+      <div class="laporan-item" onclick="printGenerus()">
+        <div class="laporan-icon o"><i class="fas fa-seedling"></i></div>
+        <div class="laporan-text"><strong>Rekap Generasi Penerus</strong><span>Laporan seluruh data anak</span></div>
+        <i class="fas fa-chevron-right chevron"></i>
+      </div>
+      <div class="laporan-item" onclick="printGuru()">
+        <div class="laporan-icon b"><i class="fas fa-graduation-cap"></i></div>
+        <div class="laporan-text"><strong>Rekap Per Kelas</strong><span>Laporan data berdasarkan kelas</span></div>
+        <i class="fas fa-chevron-right chevron"></i>
+      </div>
+      <div class="laporan-item" onclick="printRapor()">
+        <div class="laporan-icon p"><i class="fas fa-chart-pie"></i></div>
+        <div class="laporan-text"><strong>Rekap Per Status</strong><span>Laporan berdasarkan status KK</span></div>
+        <i class="fas fa-chevron-right chevron"></i>
+      </div>
+    </div>
+    <div class="laporan-section"><h3>Periode Laporan</h3></div>
+    <div class="periode-card">
+      <span class="dates">01 Jan 2024 – 31 Des 2024</span>
+      <i class="far fa-calendar"></i>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: PENGATURAN ===== -->
+<div class="screen" id="screen-pengaturan">
+  <div style="position:sticky;top:0;z-index:100">
+    <div class="pengaturan-header">
+      <h2>Pengaturan</h2>
+      <i class="fas fa-gear"></i>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="setting-section"><h3>Akun & Keamanan</h3>
+      <div class="setting-item" onclick="toggleEditMode()">
+        <div class="sicon green"><i class="fas fa-lock-open"></i></div>
+        <div class="stext"><strong>Mode Edit</strong><span id="editStatus">Nonaktif</span></div>
+        <div class="toggle" id="editToggle"></div>
+      </div>
+      <div class="setting-item">
+        <div class="sicon blue"><i class="fas fa-key"></i></div>
+        <div class="stext"><strong>Ubah Password</strong><span>Ganti kata sandi editor</span></div>
+        <i class="fas fa-chevron-right chevron"></i>
+      </div>
+    </div>
+    <div class="setting-section"><h3>Data & Sinkronisasi</h3>
+      <div class="setting-item" onclick="loadData()">
+        <div class="sicon green"><i class="fas fa-arrows-rotate"></i></div>
+        <div class="stext"><strong>Sinkronisasi Manual</strong><span>Tarik data terbaru dari server</span></div>
+        <i class="fas fa-chevron-right chevron"></i>
+      </div>
+      <div class="setting-item">
+        <div class="sicon gray"><i class="fas fa-database"></i></div>
+        <div class="stext"><strong>Ekspor Data</strong><span>Unduh semua data sebagai file</span></div>
+        <i class="fas fa-chevron-right chevron"></i>
+      </div>
+    </div>
+    <div class="setting-section"><h3>Aplikasi</h3>
+      <div class="setting-item">
+        <div class="sicon gray"><i class="fas fa-circle-info"></i></div>
+        <div class="stext"><strong>Tentang Aplikasi</strong><span>Versi 1.0.0 – Kelompok Teseh</span></div>
+        <i class="fas fa-chevron-right chevron"></i>
+      </div>
+      <div class="setting-item">
+        <div class="sicon red"><i class="fas fa-trash-can"></i></div>
+        <div class="stext"><strong>Hapus Semua Data</strong><span>Tindakan ini tidak dapat diurungkan</span></div>
+        <i class="fas fa-chevron-right chevron"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NAVBAR ===== -->
+<div class="navbar">
+  <div class="nav-item active" id="nav-beranda" onclick="switchScreen('beranda');switchTab(0)"><i class="fas fa-house"></i>Beranda</div>
+  <div class="nav-item" id="nav-keluarga" onclick="switchScreen('beranda');switchTab(0);setNavActive('keluarga')"><i class="fas fa-users"></i>Keluarga</div>
+  <div class="nav-add" onclick="openAddModal()"><i class="fas fa-plus"></i></div>
+  <div class="nav-item" id="nav-generasi" onclick="switchScreen('beranda');switchTab(1);setNavActive('generasi')"><i class="fas fa-seedling"></i>Generasi</div>
+  <div class="nav-item" id="nav-pengaturan" onclick="switchScreen('pengaturan')"><i class="fas fa-gear"></i>Pengaturan</div>
+</div>
+
+<script>
+// ============ STATE ============
+const PW = "teseh2024";
+const KELAS_TPQ = ["Paud","Caberawit A","Caberawit B","Caberawit C","Pra Remaja","Remaja","Unik"];
+const KELAS_SEKOLAH = ["PAUD","TK","Kelas 1","Kelas 2","Kelas 3","Kelas 4","Kelas 5","Kelas 6","Kelas 7","Kelas 8","Kelas 9","Kelas 10","Kelas 11","Kelas 12","Kuliah"];
+const BACAAN = ["Al-Qur'an","Tilawati Jilid 1","Tilawati Jilid 2","Tilawati Jilid 3","Tilawati Jilid 4","Tilawati Jilid 5","Tilawati Jilid 6"];
+const AVATAR_PICS_MALE = [
+  "https://api.dicebear.com/7.x/personas/svg?seed=m1&backgroundColor=b6e3f4",
+  "https://api.dicebear.com/7.x/personas/svg?seed=m2&backgroundColor=d1f4e0",
+  "https://api.dicebear.com/7.x/personas/svg?seed=m3&backgroundColor=ffd5dc",
+];
+const AVATAR_PICS_FEMALE = [
+  "https://api.dicebear.com/7.x/personas/svg?seed=f1&backgroundColor=ffdfbf",
+  "https://api.dicebear.com/7.x/personas/svg?seed=f2&backgroundColor=c0aede",
+  "https://api.dicebear.com/7.x/personas/svg?seed=f3&backgroundColor=b6e3f4",
+];
+const AV_COLORS = ["av-1","av-2","av-3","av-4","av-5"];
+
+let state = { keluarga:[], generus:[], guru:[], rapor:[] };
+let canEdit = false;
+let currentTab = 0;
+let genFilter = "Semua";
+let raporFilter = "Semua";
+let addType = "";
+let saveCallback = null;
+let formData = {};
+
+// ============ STORAGE ============
+async function loadData(){
+  try {
+    const res = await window.storage.get("teseh-data", true);
+    if(res && res.value){
+      const d = JSON.parse(res.value);
+      state.keluarga = d.keluarga||[];
+      state.generus = d.generus||[];
+      state.guru = d.guru||[];
+      state.rapor = d.rapor||[];
+    }
+  } catch(e){}
+  updateSync();
+  renderAll();
+}
+async function saveAll(){
+  try {
+    await window.storage.set("teseh-data", JSON.stringify({
+      keluarga:state.keluarga, generus:state.generus, guru:state.guru, rapor:state.rapor, updatedAt:new Date().toISOString()
+    }), true);
+  } catch(e){ alert("Gagal menyimpan ke server."); }
+  updateSync();
+}
+function updateSync(){
+  const t = new Date();
+  const s = `${pad(t.getHours())}.${pad(t.getMinutes())}.${pad(t.getSeconds())}`;
+  document.getElementById("syncTime").textContent = "Sinkron: "+s;
+}
+function pad(n){ return String(n).padStart(2,"0"); }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function calcAge(dob){
+  if(!dob) return "";
+  const t=new Date(), b=new Date(dob);
+  let a=t.getFullYear()-b.getFullYear();
+  if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate())) a--;
+  return a;
+}
+function fmtDate(d){
+  if(!d) return "-";
+  return new Date(d).toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+}
+function sortName(arr,k){ return [...arr].sort((a,b)=>(a[k]||"").localeCompare(b[k]||"","id")); }
+function initials(name){ return (name||"?").split(" ").slice(0,2).map(w=>w[0]).join("").toUpperCase(); }
+function avColor(id){ return AV_COLORS[id.charCodeAt(0)%5]; }
+
+// ============ CLOCK ============
+function tickClock(){
+  const t=new Date(), s=`${pad(t.getHours())}:${pad(t.getMinutes())}`;
+  ["clock1","clock2","clock3"].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=s;});
+}
+setInterval(tickClock,1000); tickClock();
+
+// ============ SCREEN SWITCH ============
+function switchScreen(name){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("screen-"+name).classList.add("active");
+  setNavActive(name);
+}
+function setNavActive(name){
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  const navEl = document.getElementById("nav-"+name);
+  if(navEl) navEl.classList.add("active");
+}
+
+// ============ TAB SWITCH ============
+function switchTab(idx){
+  currentTab = idx;
+  ["tab-0","tab-1","tab-2","tab-3"].forEach((id,i)=>{
+    document.getElementById(id).style.display = i===idx?"block":"none";
+  });
+  if(idx===1) renderGenerus();
+  if(idx===2) renderGuru();
+  if(idx===3) renderRapor();
+}
+
+// ============ EDIT MODE ============
+function toggleEditMode(){
+  if(canEdit){ lockEdit(); return; }
+  document.getElementById("pwOverlay").classList.add("open");
+  document.getElementById("pwInput").value="";
+  document.getElementById("pwErr").style.display="none";
+  setTimeout(()=>document.getElementById("pwInput").focus(),200);
+}
+function lockEdit(){
+  canEdit=false;
+  updateEditUI();
+}
+function closePwModal(){
+  document.getElementById("pwOverlay").classList.remove("open");
+}
+function toggleEye(){
+  const inp=document.getElementById("pwInput"), ico=document.getElementById("eyeIcon");
+  if(inp.type==="password"){ inp.type="text"; ico.className="fa fa-eye-slash eye"; }
+  else { inp.type="password"; ico.className="fa fa-eye eye"; }
+}
+function checkPw(){
+  const v=document.getElementById("pwInput").value;
+  if(v===PW){
+    canEdit=true;
+    closePwModal();
+    updateEditUI();
+    if(saveCallback){ saveCallback(); saveCallback=null; }
+  } else {
+    document.getElementById("pwErr").style.display="block";
+  }
+}
+function updateEditUI(){
+  const eb=document.getElementById("editBanner"), ib=document.getElementById("infoBar");
+  const mb=document.getElementById("modeBtn"), et=document.getElementById("editToggle");
+  const es=document.getElementById("editStatus");
+  if(canEdit){
+    eb.style.display="flex"; ib.style.display="none";
+    mb.innerHTML='<i class="fas fa-lock-open"></i> Edit Aktif';
+    if(et){ et.classList.add("on"); }
+    if(es) es.textContent="Aktif";
+  } else {
+    eb.style.display="none"; ib.style.display="flex";
+    mb.innerHTML='<i class="fas fa-lock"></i> Mode Ubah Data';
+    if(et){ et.classList.remove("on"); }
+    if(es) es.textContent="Nonaktif";
+  }
+  renderAll();
+}
+
+// ============ RENDER ALL ============
+function renderAll(){
+  renderKK(); renderGenerus(); renderGuru(); renderRapor(); updateStats();
+  buildGenChips(); buildRaporChips(); buildClassGrid();
+}
+
+// ============ STATS ============
+function updateStats(){
+  const kk=state.keluarga;
+  document.getElementById("s-kk").textContent=kk.length;
+  document.getElementById("s-aktif").textContent=kk.filter(k=>k.statusKK==="Aktif").length;
+  document.getElementById("s-merantau").textContent=kk.filter(k=>k.statusKK==="Merantau").length;
+  document.getElementById("s-anggota").textContent=kk.reduce((s,k)=>s+(k.anggota?.length||0),0);
+  document.getElementById("s-guru").textContent=state.guru.length;
+  document.getElementById("s-mt").textContent=state.guru.filter(g=>g.status?.startsWith("MT")).length;
+  document.getElementById("s-ms").textContent=state.guru.filter(g=>g.status?.startsWith("MS")).length;
+}
+
+// ============ CLASS GRID ============
+function buildClassGrid(){
+  const el=document.getElementById("classGrid"); if(!el) return;
+  el.innerHTML=KELAS_TPQ.map(k=>`
+    <div class="class-card">
+      <div class="num">${state.generus.filter(g=>g.kelasTpq===k).length}</div>
+      <div class="lbl">${k}</div>
+    </div>`).join("");
+}
+
+// ============ GEN CHIPS ============
+function buildGenChips(){
+  const el=document.getElementById("genChips"); if(!el) return;
+  const all=["Semua",...KELAS_TPQ];
+  el.innerHTML=all.map(k=>`<span class="chip${genFilter===k?" active":""}" onclick="setGenFilter('${k}')">${k}</span>`).join("");
+}
+function setGenFilter(k){ genFilter=k; buildGenChips(); renderGenerus(); }
+
+function buildRaporChips(){
+  const el=document.getElementById("raporChips"); if(!el) return;
+  const all=["Semua",...KELAS_TPQ];
+  el.innerHTML=all.map(k=>`<span class="chip${raporFilter===k?" active":""}" onclick="setRaporFilter('${k}')">${k}</span>`).join("");
+}
+function setRaporFilter(k){ raporFilter=k; buildRaporChips(); renderRapor(); }
+
+// ============ RENDER KK ============
+function renderKK(){
+  const el=document.getElementById("kkList"); if(!el) return;
+  const q=(document.getElementById("kkSearch")?.value||"").toLowerCase();
+  let data=sortName(state.keluarga,"namaKK").filter(k=>
+    !q||k.namaKK?.toLowerCase().includes(q)||k.anggota?.some(a=>a.nama?.toLowerCase().includes(q))
+  );
+  if(!data.length){
+    el.innerHTML=`<div class="table-body-empty"><i class="fas fa-folder-open"></i><p>Belum ada data</p><p style="font-size:11px;margin-top:4px;color:#bbb">Data keluarga akan muncul di sini setelah ditambahkan.</p></div>`;
+    return;
+  }
+  el.innerHTML=data.map((k,i)=>{
+    const status=k.statusKK||"Aktif";
+    return `<div class="person-card">
+      <div class="person-avatar ${avColor(k.id)}">${initials(k.namaKK)}</div>
+      <div class="person-info">
+        <div class="person-name">${k.namaKK}</div>
+        <div class="person-sub">${k.anggota?.length||0} anggota${k.alamat?` · ${k.alamat}`:""}</div>
+        <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
+          ${k.anggota?.slice(0,2).map(a=>`<span style="font-size:11px;color:var(--text3)">${a.nama}${a.tglLahir?` (${calcAge(a.tglLahir)} thn)`:""}</span>`).join("&nbsp;·&nbsp;")||""}
+          ${(k.anggota?.length||0)>2?`<span style="font-size:11px;color:var(--text3)">+${k.anggota.length-2} lainnya</span>`:""}
+        </div>
+      </div>
+      <span class="person-badge${status==="Merantau"?" orange":""}">${status}</span>
+      <i class="fas fa-chevron-right chevron" style="margin-left:8px"></i>
+    </div>`;
+  }).join("");
+  if(canEdit){
+    el.innerHTML+=`<div style="padding:14px 16px;display:flex;gap:8px">
+      <button onclick="openAddKK()" style="flex:1;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer"><i class="fas fa-plus"></i> Tambah KK</button>
+    </div>`;
+  }
+}
+
+// ============ RENDER GENERUS ============
+function renderGenerus(){
+  const el=document.getElementById("genusList"); if(!el) return;
+  const q=(document.getElementById("genSearch")?.value||"").toLowerCase();
+  let data=sortName(state.generus,"namaAnak").filter(g=>{
+    const kOk=genFilter==="Semua"||g.kelasTpq===genFilter;
+    const sOk=!q||g.namaAnak?.toLowerCase().includes(q)||g.namaOrtu?.toLowerCase().includes(q);
+    return kOk&&sOk;
+  });
+  const gc=document.getElementById("genCount");
+  if(gc) gc.textContent=`${data.length} siswa`;
+
+  const rt=document.getElementById("raporTitle");
+  if(rt) rt.textContent=`Rapor Generasi Penerus (${data.length} siswa)`;
+
+  if(!data.length){
+    el.innerHTML=`<div class="table-body-empty"><i class="fas fa-seedling"></i><p>Belum ada data generus</p></div>`;
+    return;
+  }
+  el.innerHTML=data.map((g,i)=>{
+    const isFemale=g.jenisKelamin==="Perempuan";
+    const avIdx=i%3;
+    return `<div class="person-card">
+      <div class="person-avatar" style="background:${isFemale?"#F3E8FF":"#E8F5EE"};color:${isFemale?"#7C3AED":"var(--green)"}">
+        ${initials(g.namaAnak)}
+      </div>
+      <div class="person-info">
+        <div class="person-name">${g.namaAnak}</div>
+        <div class="person-sub" style="color:var(--green);font-weight:600">${g.kelasTpq}</div>
+        <div class="person-sub">Ortu: ${g.namaOrtu||"-"}</div>
+      </div>
+      <span class="person-badge">Aktif</span>
+      <i class="fas fa-chevron-right chevron" style="margin-left:8px"></i>
+    </div>`;
+  }).join("");
+  if(canEdit){
+    el.innerHTML+=`<div style="padding:14px 16px">
+      <button onclick="openAddGenerus()" style="width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer"><i class="fas fa-plus"></i> Tambah Generus</button>
+    </div>`;
+  }
+}
+
+// ============ RENDER GURU ============
+function renderGuru(){
+  const el=document.getElementById("guruList"); if(!el) return;
+  const q=(document.getElementById("guruSearch")?.value||"").toLowerCase();
+  let data=sortName(state.guru,"nama").filter(g=>!q||g.nama?.toLowerCase().includes(q));
+  if(!data.length){
+    el.innerHTML=`<div class="table-body-empty"><i class="fas fa-chalkboard-user"></i><p>Belum ada data guru</p></div>`;
+    return;
+  }
+  el.innerHTML=data.map(g=>{
+    const isMT=g.status?.startsWith("MT");
+    return `<div class="person-card">
+      <div class="person-avatar ${avColor(g.id)}">${initials(g.nama)}</div>
+      <div class="person-info">
+        <div class="person-name">${g.nama}</div>
+        <div class="person-sub">${g.status||"-"}</div>
+        <div class="person-sub">${g.kelasAjar?`Mengajar: ${g.kelasAjar}`:""}</div>
+      </div>
+      <span class="person-badge" style="${isMT?"background:#E8F0FD;color:var(--blue)":"background:#FEF0E4;color:var(--orange)"}">${isMT?"MT":"MS"}</span>
+      <i class="fas fa-chevron-right chevron" style="margin-left:8px"></i>
+    </div>`;
+  }).join("");
+  if(canEdit){
+    el.innerHTML+=`<div style="padding:14px 16px">
+      <button onclick="openAddGuru()" style="width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer"><i class="fas fa-plus"></i> Tambah Guru</button>
+    </div>`;
+  }
+}
+
+// ============ RENDER RAPOR ============
+function renderRapor(){
+  const el=document.getElementById("raporList"); if(!el) return;
+  const q=(document.getElementById("raporSearch")?.value||"").toLowerCase();
+  let data=sortName(state.rapor,"namaAnak").filter(r=>{
+    const kOk=raporFilter==="Semua"||r.kelasTpq===raporFilter;
+    const sOk=!q||r.namaAnak?.toLowerCase().includes(q)||r.namaOrtu?.toLowerCase().includes(q);
+    return kOk&&sOk;
+  });
+  const rt=document.getElementById("raporTitle");
+  if(rt) rt.textContent=`Rapor${raporFilter!=="Semua"?" - Kelas "+raporFilter:""} (${data.length} siswa)`;
+
+  if(!data.length){
+    el.innerHTML=`<div class="table-body-empty"><i class="fas fa-clipboard-list"></i><p>Belum ada data rapor</p></div>`;
+    return;
+  }
+  el.innerHTML=data.map(r=>`<div class="person-card">
+    <div class="person-avatar av-1">${initials(r.namaAnak)}</div>
+    <div class="person-info">
+      <div class="person-name">${r.namaAnak}</div>
+      <div class="person-sub" style="color:var(--green);font-weight:600">${r.kelasTpq}</div>
+      <div class="person-sub">Ortu: ${r.namaOrtu||"-"}</div>
+      <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
+        ${r.pegon?`<span style="font-size:11px;background:var(--green-light);color:var(--green);padding:2px 8px;border-radius:20px">Pegon: ${r.pegon}</span>`:""}
+        ${r.bacaan?`<span style="font-size:11px;background:#E8F0FD;color:var(--blue);padding:2px 8px;border-radius:20px">${r.bacaan}</span>`:""}
+      </div>
+    </div>
+    <i class="fas fa-chevron-right chevron"></i>
+  </div>`).join("");
+  if(canEdit){
+    el.innerHTML+=`<div style="padding:14px 16px">
+      <button onclick="openAddRapor()" style="width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer"><i class="fas fa-plus"></i> Tambah Rapor</button>
+    </div>`;
+  }
+}
+
+// ============ ADD MODAL ============
+function openAddModal(){
+  if(!canEdit){ saveCallback=openAddModal; toggleEditMode(); return; }
+  const tab=currentTab;
+  if(tab===0) openAddKK();
+  else if(tab===1) openAddGenerus();
+  else if(tab===2) openAddGuru();
+  else openAddRapor();
+}
+function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+function openModal(id){ document.getElementById(id).classList.add("open"); }
+function setModal(title, html){ 
+  document.getElementById("addModalTitle").textContent=title;
+  document.getElementById("addModalBody").innerHTML=html;
+}
+
+function openAddKK(){
+  if(!canEdit){ saveCallback=openAddKK; toggleEditMode(); return; }
+  addType="kk"; formData={};
+  setModal("Tambah Kepala Keluarga",`
+    <div class="form-group"><label>Nama Kepala Keluarga *</label><input id="f-namaKK" placeholder="Nama lengkap"/></div>
+    <div class="form-group"><label>Status KK</label><select id="f-statusKK"><option>Aktif</option><option>Merantau</option></select></div>
+    <div class="form-group"><label>No HP</label><input id="f-hp" placeholder="08xx-xxxx-xxxx" type="tel"/></div>
+    <div class="form-group"><label>Alamat</label><textarea id="f-alamat" placeholder="Alamat lengkap"></textarea></div>
+    <div class="form-group"><label>Nama Anggota (pisahkan koma)</label><input id="f-anggota" placeholder="Nama Istri, Nama Anak 1, ..."/></div>
+    <div class="form-group"><label>Keterangan</label><textarea id="f-ket"></textarea></div>
+  `);
+  openModal("addModal");
+}
+
+function openAddGenerus(){
+  if(!canEdit){ saveCallback=openAddGenerus; toggleEditMode(); return; }
+  addType="generus"; formData={};
+  setModal("Tambah Generasi Penerus",`
+    <div class="form-group"><label>Nama Anak *</label><input id="f-namaAnak" placeholder="Nama lengkap anak"/></div>
+    <div class="form-group"><label>Nama Orang Tua</label><input id="f-namaOrtu" placeholder="Nama ayah / ibu"/></div>
+    <div class="form-group"><label>No HP Orang Tua</label><input id="f-hpOrtu" type="tel" placeholder="08xx-xxxx-xxxx"/></div>
+    <div class="form-group"><label>Jenis Kelamin</label><select id="f-jk"><option>Laki-laki</option><option>Perempuan</option></select></div>
+    <div class="form-group"><label>Tanggal Lahir</label><input id="f-tglLahir" type="date"/></div>
+    <div class="form-group"><label>Kelas Sekolah</label><select id="f-kelasSekolah">${KELAS_SEKOLAH.map(k=>`<option>${k}</option>`).join("")}</select></div>
+    <div class="form-group"><label>Kelas TPQ</label><select id="f-kelasTpq">${KELAS_TPQ.map(k=>`<option>${k}</option>`).join("")}</select></div>
+    <div class="form-group"><label>Keterangan</label><textarea id="f-ket"></textarea></div>
+  `);
+  openModal("addModal");
+}
+
+function openAddGuru(){
+  if(!canEdit){ saveCallback=openAddGuru; toggleEditMode(); return; }
+  addType="guru"; formData={};
+  setModal("Tambah Guru / Mubaligh",`
+    <div class="form-group"><label>Nama Guru *</label><input id="f-nama" placeholder="Nama lengkap"/></div>
+    <div class="form-group"><label>Jenis Kelamin</label><select id="f-jk"><option>Laki-laki</option><option>Perempuan</option></select></div>
+    <div class="form-group"><label>Status</label><select id="f-status"><option>MT (Muballighin Tugasan)</option><option>MS (Muballighin Setempat)</option></select></div>
+    <div class="form-group"><label>Tanggal Lahir</label><input id="f-tglLahir" type="date"/></div>
+    <div class="form-group"><label>Kelas Mengajar</label><select id="f-kelasAjar"><option value="">-- Pilih --</option>${[...KELAS_TPQ,"Kelompok","Penasihat"].map(k=>`<option>${k}</option>`).join("")}</select></div>
+    <div class="form-group"><label>No HP</label><input id="f-hp" type="tel" placeholder="08xx-xxxx-xxxx"/></div>
+    <div class="form-group"><label>Alamat</label><textarea id="f-alamat"></textarea></div>
+    <div class="form-group"><label>Keterangan</label><textarea id="f-ket"></textarea></div>
+  `);
+  openModal("addModal");
+}
+
+function openAddRapor(){
+  if(!canEdit){ saveCallback=openAddRapor; toggleEditMode(); return; }
+  addType="rapor"; formData={};
+  setModal("Tambah Rapor Generus",`
+    <div class="form-group"><label>Kelas TPQ</label><select id="f-kelasTpq">${KELAS_TPQ.map(k=>`<option>${k}</option>`).join("")}</select></div>
+    <div class="form-group"><label>Nama Anak *</label>
+      ${state.generus.length?`<select id="f-namaAnak"><option value="">-- Pilih --</option>${sortName(state.generus,"namaAnak").map(g=>`<option>${g.namaAnak}</option>`).join("")}</select>`:
+      `<input id="f-namaAnak" placeholder="Nama anak"/>`}
+    </div>
+    <div class="form-group"><label>Nama Ortu</label><input id="f-namaOrtu"/></div>
+    <div class="form-group"><label>No HP Ortu</label><input id="f-hpOrtu" type="tel"/></div>
+    <div class="form-group"><label>Pegon</label><input id="f-pegon" placeholder="Nilai / keterangan"/></div>
+    <div class="form-group"><label>Bacaan</label><select id="f-bacaan">${BACAAN.map(b=>`<option>${b}</option>`).join("")}</select></div>
+    <div class="form-group"><label>Do'a-Do'a</label><textarea id="f-doa" placeholder="Doa makan, Doa tidur, ..."></textarea></div>
+    <div class="form-group"><label>Dalil-Dalil</label><textarea id="f-dalil" placeholder="QS Al-Fatihah, ..."></textarea></div>
+    <div class="form-group"><label>Akhlak</label><input id="f-akhlak"/></div>
+    <div class="form-group"><label>Catatan Pengajar</label><textarea id="f-catatan"></textarea></div>
+  `);
+  openModal("addModal");
+}
+
+function saveData(){
+  const g = id => { const el=document.getElementById(id); return el?el.value:""; };
+  if(addType==="kk"){
+    const nama=g("f-namaKK").trim();
+    if(!nama) return;
+    const angStr=g("f-anggota").trim();
+    const anggota=angStr?angStr.split(",").map(n=>({nama:n.trim(),hubungan:"",tglLahir:""})):[];
+    state.keluarga.push({id:uid(),namaKK:nama,statusKK:g("f-statusKK"),hp:g("f-hp"),alamat:g("f-alamat"),anggota,keterangan:g("f-ket")});
+  } else if(addType==="generus"){
+    const nama=g("f-namaAnak").trim();
+    if(!nama) return;
+    state.generus.push({id:uid(),namaAnak:nama,namaOrtu:g("f-namaOrtu"),hpOrtu:g("f-hpOrtu"),jenisKelamin:g("f-jk"),tglLahir:g("f-tglLahir"),kelasSekolah:g("f-kelasSekolah"),kelasTpq:g("f-kelasTpq"),keterangan:g("f-ket")});
+  } else if(addType==="guru"){
+    const nama=g("f-nama").trim();
+    if(!nama) return;
+    state.guru.push({id:uid(),nama,jenisKelamin:g("f-jk"),status:g("f-status"),tglLahir:g("f-tglLahir"),kelasAjar:g("f-kelasAjar"),hp:g("f-hp"),alamat:g("f-alamat"),keterangan:g("f-ket")});
+  } else if(addType==="rapor"){
+    const nama=g("f-namaAnak").trim();
+    if(!nama) return;
+    state.rapor.push({id:uid(),kelasTpq:g("f-kelasTpq"),namaAnak:nama,namaOrtu:g("f-namaOrtu"),hpOrtu:g("f-hpOrtu"),pegon:g("f-pegon"),bacaan:g("f-bacaan"),doaDoa:g("f-doa"),dalilDalil:g("f-dalil"),akhlak:g("f-akhlak"),catatan:g("f-catatan")});
+  }
+  closeModal("addModal");
+  saveAll();
+  renderAll();
+}
+
+// ============ PRINT ============
+function printSection(title, html){
+  const w=window.open("","_blank");
+  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:sans-serif;color:#111;padding:20px}
+    .hdr{text-align:center;border-bottom:3px double #1A6B3C;padding-bottom:12px;margin-bottom:16px}
+    .hdr h1{font-size:20px;color:#1A6B3C}.hdr p{font-size:12px;color:#555;margin-top:4px}
+    table{width:100%;border-collapse:collapse;font-size:11px}
+    th{background:#1A6B3C;color:#fff;padding:7px 6px;text-align:left}
+    td{padding:6px;border-bottom:1px solid #ddd;vertical-align:top}
+    tr:nth-child(even) td{background:#f5fbf7}
+    .footer{margin-top:16px;text-align:right;font-size:10px;color:#aaa}
+    @media print{body{padding:8px}}
+  </style></head><body>
+  <div class="hdr"><h1>KELOMPOK TESEH</h1><p>${title} &mdash; ${new Date().toLocaleDateString("id-ID",{weekday:"long",day:"2-digit",month:"long",year:"numeric"})}</p></div>
+  ${html}
+  <div class="footer">Sistem Pendataan Kelompok Teseh &copy; ${new Date().getFullYear()}</div>
+  </body></html>`);
+  w.document.close(); setTimeout(()=>w.print(),500);
+}
+function printKK(){
+  const rows=sortName(state.keluarga,"namaKK").map((k,i)=>`
+    <tr><td colspan="6" style="background:#d4efdf;font-weight:700;padding:6px 8px">KK: ${k.namaKK} | Status: ${k.statusKK||"Aktif"} | HP: ${k.hp||"-"} | Alamat: ${k.alamat||"-"}</td></tr>
+    ${(k.anggota||[]).map(a=>`<tr><td></td><td>${a.nama||"-"}</td><td>${a.hubungan||"-"}</td><td>${fmtDate(a.tglLahir)}</td><td>${calcAge(a.tglLahir)||"-"} thn</td><td>${k.keterangan||"-"}</td></tr>`).join("")}
+  `).join("");
+  printSection("Data Keluarga",`<p style="margin-bottom:10px;font-size:12px">Total KK: <b>${state.keluarga.length}</b></p>
+  <table><thead><tr><th>No</th><th>Nama Anggota</th><th>Hubungan</th><th>Tgl Lahir</th><th>Usia</th><th>Keterangan</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+function printGenerus(){
+  const data=sortName(state.generus.filter(g=>genFilter==="Semua"||g.kelasTpq===genFilter),"namaAnak");
+  const rows=data.map((g,i)=>`<tr><td>${i+1}</td><td>${g.namaAnak}</td><td>${g.namaOrtu||"-"}</td><td>${g.hpOrtu||"-"}</td><td>${g.jenisKelamin}</td><td>${fmtDate(g.tglLahir)}</td><td>${calcAge(g.tglLahir)||"-"} thn</td><td>${g.kelasSekolah||"-"}</td><td>${g.kelasTpq||"-"}</td><td>${g.keterangan||"-"}</td></tr>`).join("");
+  printSection("Data Generasi Penerus",`<table><thead><tr><th>No</th><th>Nama Anak</th><th>Nama Ortu</th><th>HP Ortu</th><th>JK</th><th>Tgl Lahir</th><th>Usia</th><th>Kelas Sekolah</th><th>Kelas TPQ</th><th>Keterangan</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+function printGuru(){
+  const rows=sortName(state.guru,"nama").map((g,i)=>`<tr><td>${i+1}</td><td>${g.nama}</td><td>${g.jenisKelamin}</td><td>${g.status}</td><td>${fmtDate(g.tglLahir)}</td><td>${calcAge(g.tglLahir)||"-"} thn</td><td>${g.alamat||"-"}</td><td>${g.kelasAjar||"-"}</td><td>${g.hp||"-"}</td><td>${g.keterangan||"-"}</td></tr>`).join("");
+  printSection("Data Guru / Muballighin",`<table><thead><tr><th>No</th><th>Nama</th><th>JK</th><th>Status</th><th>Tgl Lahir</th><th>Usia</th><th>Alamat</th><th>Kelas</th><th>HP</th><th>Ket</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+function printRapor(){
+  const data=sortName(state.rapor.filter(r=>raporFilter==="Semua"||r.kelasTpq===raporFilter),"namaAnak");
+  const rows=data.map((r,i)=>`<tr><td>${i+1}</td><td>${r.namaAnak}</td><td>${r.kelasTpq}</td><td>${r.namaOrtu||"-"}</td><td>${r.hpOrtu||"-"}</td><td>${r.pegon||"-"}</td><td>${r.bacaan||"-"}</td><td>${r.doaDoa||"-"}</td><td>${r.dalilDalil||"-"}</td><td>${r.akhlak||"-"}</td><td>${r.catatan||"-"}</td></tr>`).join("");
+  printSection("Rapor Generasi Penerus",`<table><thead><tr><th>No</th><th>Nama Anak</th><th>Kelas</th><th>Nama Ortu</th><th>HP Ortu</th><th>Pegon</th><th>Bacaan</th><th>Do'a</th><th>Dalil</th><th>Akhlak</th><th>Catatan</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+
+// ============ INIT ============
+loadData();
+buildGenChips();
+buildRaporChips();
+buildClassGrid();
+updateEditUI();
+</script>
+</body>
+</html>
